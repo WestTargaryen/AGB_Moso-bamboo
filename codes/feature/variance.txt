@@ -1,0 +1,70 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <cmath>
+
+#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/principal_curvatures.h>
+using namespace std;
+
+int main()
+{
+	int i = 1;
+	fstream junzhi;
+	fstream fangcha;
+	junzhi.open("",ios::out);
+	fangcha.open("",ios::out);
+
+
+	while (i <= 70) {
+		string inputfilename = "" + std::to_string(i) + ".txt";
+
+		vector<double> data; 
+		double sum = 0, average = 0, variance = 0; 
+
+		ifstream infile(inputfilename);
+		if (!infile.is_open()) { 
+			cout << "Failed to open input file: " << endl;
+			return 0;
+		}
+
+		double num1,num2,num3;
+		while (infile >> num1 >> num2 >> num3) { 
+			data.push_back(num2);
+			sum += num2;
+		}
+		infile.close();
+
+		if (data.size() > 0) {
+		
+			average = sum / data.size();
+
+			
+			for (int i = 0; i < data.size(); i++) {
+				variance += pow(data[i] - average, 2);
+			}
+			variance /= data.size();
+		}
+
+		
+		junzhi << average << endl;	
+		fangcha << variance << endl;
+		i++;
+
+		//if (!outfile.is_open()) { 
+		//	cout << "Failed to open output file: "  << endl;
+		//	return 0;
+		//}
+		
+		//for (int i = 0; i < data.size(); i++) {
+		//	outfile << data[i] << endl;
+		//}
+		//outfile.close();
+		cout  << variance << endl;
+		
+	}
+	return 0;
+}

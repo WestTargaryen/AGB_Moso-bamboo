@@ -1,0 +1,69 @@
+#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/principal_curvatures.h> 
+
+using namespace std;
+struct Curvature
+{
+	float Gaussian;
+	float Mean;
+};
+
+int main(int argc, char** argv) {
+
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	fstream data;
+	data.open("", ios::out);
+	int i = 1;
+	while (pcl::io::loadPCDFile<pcl::PointXYZ>("" + std::to_string(i) + ".pcd", *cloud) != -1)
+	{
+		cout << "Loaded " << cloud->points.size() << " points." << endl;
+		
+		pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
+		n.setInputCloud(cloud);
+		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+		n.setSearchMethod(tree);      
+		// n.setRadiusSearch (0.03);  
+		n.setKSearch(10);
+		pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+		n.compute(*normals);        
+		
+		pcl::PrincipalCurvaturesEstimation<pcl::PointXYZ, pcl::Normal, pcl::PrincipalCurvatures> p;
+		p.setInputCloud(cloud);      
+		p.setInputNormals(normals);  
+		p.setSearchMethod(tree);     
+		//p.setRadiusSearch(1.0);
+		p.setKSearch(10);
+		
+		pcl::PointCloud<pcl::PrincipalCurvatures>::Ptr pri(new pcl::PointCloud<pcl::PrincipalCurvatures>());
+		p.compute(*pri);
+
+		float K1 = 0.0, K2 = 0.0;
+		Curvature cv = { 0.0,0.0 }; 
+		vector<Curvature>qulv;   
+		for (size_t i = 0; i < pri->points.size(); ++i) {
+
+			K1 = pri->points[i].pc1;         
+			K2 = pri->points[i].pc2;          
+			cv.Gaussian = K1 * K2;            
+			cv.Mean = (K1 + K2) / 2;         
+			qulv.push_back(cv);
+		}
+		
+
+		float num = 0;
+		for (size_t i = 0; i < pri->points.size(); ++i)
+		{
+			num += qulv[i].Mean;
+		}
+		cout << num / pri->points.size() << endl;
+		data << num / pri->points.size() << endl;
+		i++;
+
+	}
+
+	return 0;
+}
+

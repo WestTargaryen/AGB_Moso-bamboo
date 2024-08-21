@@ -1,0 +1,57 @@
+#include<iostream> 
+#include<fstream>  
+#include <string>  
+#include <sstream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_circle3D.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/surface/concave_hull.h>
+#include <pcl/surface/convex_hull.h>
+#include <Eigen/Core>
+#include <pcl/common/transforms.h>
+#include <pcl/keypoints/uniform_sampling.h> 
+#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/common/time.h>
+#include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/visualization/pcl_visualizer.h>
+using namespace std;
+
+
+int main()
+{
+	string filenameread = "";
+	string filenamewrite = "";
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+
+
+	int i = 1;
+	while (pcl::io::loadPCDFile<pcl::PointXYZ>(filenameread + std::to_string(i) + ".pcd", *cloud) != -1)
+	{
+		cout  << cloud->points.size() << endl;
+		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_radius(new pcl::PointCloud<pcl::PointXYZ>);
+	
+		pcl::RadiusOutlierRemoval<pcl::PointXYZ> ror;
+		ror.setInputCloud(cloud);     
+		ror.setRadiusSearch(0.1);        
+		ror.setMinNeighborsInRadius(3); 
+		ror.filter(*cloud_radius);     
+		cout  << cloud_radius->points.size() << endl;
+		pcl::PCDWriter writer;
+		writer.write<pcl::PointXYZ>(filenamewrite + std::to_string(i) + ".pcd", *cloud_radius);
+		i++;
+	}
+	system("pause");
+}
+

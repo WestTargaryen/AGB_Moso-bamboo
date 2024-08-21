@@ -1,0 +1,73 @@
+#include<iostream> 
+#include<fstream>  
+#include <string>  
+#include <sstream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_circle3D.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/surface/concave_hull.h>
+#include <pcl/surface/convex_hull.h>
+#include <Eigen/Core>
+#include <pcl/common/transforms.h>
+#include <pcl/keypoints/uniform_sampling.h>
+#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/common/time.h>
+#include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/visualization/pcl_visualizer.h>
+using namespace std;
+
+
+int main()
+{
+	string filenameread = "";
+	string file = "";
+	ofstream data(file);
+
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	
+	int i = 1;
+	while (pcl::io::loadPCDFile<pcl::PointXYZ>(filenameread + std::to_string(i) + ".pcd", *cloud) != -1)
+	{
+		float allpoints = cloud->points.size();
+		pcl::PointXYZ Min;
+		pcl::PointXYZ Max;
+		pcl::getMinMax3D(*cloud, Min, Max);
+		float average = (Max.z - Min.z) / 10;
+		
+		float sum = 0;
+		int j = 1;
+		while (j <= 10)
+		{
+			pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_fenceng(new pcl::PointCloud<pcl::PointXYZ>);
+
+			pcl::PassThrough<pcl::PointXYZ> pass;
+			pass.setInputCloud(cloud);		
+			pass.setFilterFieldName("z");		
+			pass.setFilterLimits(sum, sum + average);		
+			
+			pass.filter(*cloud_fenceng);		
+			sum = sum + average;
+			j++;
+			data << cloud_fenceng->points.size() / allpoints << " ";
+			cout << cloud_fenceng->points.size() / allpoints << " ";
+		}
+		data << endl;
+		i++;
+	}
+	system("pause");
+}
+
+
+
